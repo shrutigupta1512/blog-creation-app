@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blog Creation App</title>
+    <style>
+        /* Your existing CSS code */
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+        .container {
+            display: flex;
+            width: 90%;
+            max-width: 1000px;
+        }
+        .left, .right {
+            width: 50%;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .left {
+            background-color: #e0f7fa;
+            border-right: 2px solid #ccc;
+        }
+        .left h2, .right h2 {
+            color: #ffeb3b;
+        }
+        .left label {
+            color: #ffeb3b;
+            font-weight: bold;
+        }
+        .input-box, .text-area {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .submit-button {
+            background-color: #ff9800;
+            color: #fff;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .right {
+            background-color: #fff;
+        }
+        .blog-list {
+            margin-top: 20px;
+        }
+        .blog-item {
+            background-color: #0288d1;
+            color: #fff;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .expand-btn, .collapse-btn {
+            background-color: #ffeb3b;
+            border: none;
+            cursor: pointer;
+            border-radius: 50%;
+            width: 25px;
+            height: 25px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+        }
+        .blog-details, .comment-section {
+            background-color: #f0f0f0;
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 4px;
+        }
+        .comment-box {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .comment-btn {
+            padding: 8px 16px;
+            background-color: #ff9800;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .comment-item {
+            background-color: #cfd8dc;
+            margin: 5px 0;
+            padding: 8px;
+            border-radius: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .delete-btn {
+            background-color: #f44336;
+            color: #fff;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Left side: Blog creation form -->
+        <div class="left">
+            <h2>Create a New Blog Post</h2>
+            <label for="title">Blog Title:</label>
+            <input type="text" id="title" class="input-box" placeholder="Enter blog title">
+            <label for="author">Blog Author:</label>
+            <input type="text" id="author" class="input-box" placeholder="Enter author name">
+            <label for="content">Blog Content:</label>
+            <textarea id="content" class="text-area" placeholder="Write your blog content here"></textarea>
+            <button class="submit-button" onclick="createBlog()">Submit</button>
+            <p id="success-message" style="color: green; display: none;">Blog post created successfully!</p>
+        </div>
+
+        <!-- Right side: Blog list and details -->
+        <div class="right">
+            <h2>Blog Posts</h2>
+            <div id="blog-list" class="blog-list">
+                <!-- Blog items will be displayed here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let blogs = JSON.parse(localStorage.getItem("blogs")) || [];
+
+        function saveToLocalStorage() {
+            localStorage.setItem("blogs", JSON.stringify(blogs));
+        }
+
+        function createBlog() {
+            const title = document.getElementById("title").value;
+            const author = document.getElementById("author").value;
+            const content = document.getElementById("content").value;
+            if (!title || !author || !content) {
+                alert("Please fill in all fields");
+                return;
+            }
+
+            const blog = { title, author, content, comments: [] };
+            blogs.push(blog);
+            saveToLocalStorage();
+            renderBlogList();
+            document.getElementById("success-message").style.display = "block";
+            setTimeout(() => { document.getElementById("success-message").style.display = "none"; }, 2000);
+
+            // Clear input fields
+            document.getElementById("title").value = "";
+            document.getElementById("author").value = "";
+            document.getElementById("content").value = "";
+        }
+
+        function renderBlogList() {
+            const blogList = document.getElementById("blog-list");
+            blogList.innerHTML = "";
+            blogs.forEach((blog, index) => {
+                const blogItem = document.createElement("div");
+                blogItem.className = "blog-item";
+                blogItem.innerHTML = `
+                    <span>${blog.title}</span>
+                    <button class="expand-btn" onclick="expandBlog(${index})">+</button>
+                `;
+                blogList.appendChild(blogItem);
+            });
+        }
+
+        function expandBlog(index) {
+            const blog = blogs[index];
+            const blogDetails = document.createElement("div");
+            blogDetails.className = "blog-details";
+            blogDetails.innerHTML = `
+                <div class="blog-item">
+                    <span>${blog.title}</span>
+                    <button class="collapse-btn" onclick="collapseBlog(${index})">-</button>
+                </div>
+                <p><strong>Author:</strong> ${blog.author}</p>
+                <p>${blog.content}</p>
+                <div class="comment-section">
+                    <h4>Comments</h4>
+                    <div id="comment-list-${index}">
+                        ${blog.comments.map((comment, cIndex) => `
+                            <div class="comment-item">
+                                <span>${comment}</span>
+                                <button class="delete-btn" onclick="deleteComment(${index}, ${cIndex})">Delete</button>
+                            </div>
+                        `).join("")}
+                    </div>
+                    <input type="text" id="comment-box-${index}" class="comment-box" placeholder="Add a comment">
+                    <button class="comment-btn" onclick="addComment(${index})">Add Comment</button>
+                </div>
+            `;
+            const blogList = document.getElementById("blog-list");
+            blogList.innerHTML = ""; // Clear the blog list
+            blogList.appendChild(blogDetails); // Append the blog details
+        }
+
+        function collapseBlog(index) {
+            renderBlogList(); // Re-render the blog list to collapse the blog
+        }
+
+        function addComment(index) {
+            const commentBox = document.getElementById(`comment-box-${index}`);
+            const comment = commentBox.value.trim();
+            if (!comment) return;
+            blogs[index].comments.push(comment);
+            commentBox.value = "";
+            saveToLocalStorage();
+            expandBlog(index);  // Re-render to update comments
+        }
+
+        function deleteComment(blogIndex, commentIndex) {
+            blogs[blogIndex].comments.splice(commentIndex, 1);
+            saveToLocalStorage();
+            expandBlog(blogIndex);  // Re-render to update comments
+        }
+
+        // Load and display blogs on page load
+        document.addEventListener("DOMContentLoaded", () => {
+            renderBlogList();
+        });
+    </script>
+</body>
+</html>
